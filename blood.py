@@ -15,24 +15,28 @@ def transform_to_percentile(dataframe):
 
     return transformed_dataframe
 
+#
 # Read in data and metadata - there are two metadata files at the moment because of general disorganisation
 
-all_data        = pandas.read_hdf('/path/to/data', 'all_data')
-s4m_metadata    = pandas.read_hdf('/path/to/metadata', 'metadata')
-all_annotations = pandas.read_csv('/path/to/data_portal_metadata/blood_atlas_annotations_130519.tsv', sep='\t').set_index('sample_id') # this is from data portal
+all_data, all_s4m_metadata = mega_functions.read_in_all_data(read_anew=False, remove_lower_component=False)
+
+# Reorganising slightly disorganised annotations
+
+all_annotations          = pandas.read_csv('/Users/pwangel/Data/Metadata_dumps/blood_atlas_annotations_180719.tsv', sep='\t').set_index('sample_id')
+all_annotations          = all_annotations.loc[ (all_annotations['include_blood'].values==True) ]
 
 # Reorganising slightly disorganised annotations - Data Portal does not yet have platform, the s4m metadata has a column 'Platform_Category' which is used as the platform variable
-
-all_annotations       = all_annotations.loc[(all_annotations['include_blood'].values==True)]
 
 all_annotations.index = numpy.core.defchararray.add(all_annotations.index.values.astype(str), numpy.full(shape=all_annotations.shape[0], fill_value=';').astype(str))
 all_annotations.index = numpy.core.defchararray.add(all_annotations.index.values.astype(str), all_annotations['dataset_id'].values.astype(str))
 
-blood_annotations = all_s4m_metadata.merge(all_annotations[['display_metadata', 'tier1', 'tier2', 'tier3', 'celltype']], how='right', left_index=True, right_index=True)
+s4m_metadata = all_s4m_metadata.merge(all_annotations[['display_metadata', 'tier1', 'tier2', 'tier3', 'celltype']], how='inner', left_index=True, right_index=True)
+
+# Select only the blood data, and drop genes that are not measured in all datasets
+blood_annotations = s4m_metadata.loc[numpy.in1d(s4m_metadata.index.values.astype(str), all_annotations.index.values.astype(str))] 
 
 # Select only the blood data, and drop genes that are not measured in all datasets
 blood_data       = all_data.iloc[:,numpy.in1d(all_data.columns.values.astype(str), blood_annotations.index.values.astype(str))].dropna(how='any')
-
 # Search for platform dependent genes 
 
 import rpy2
