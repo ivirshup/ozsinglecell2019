@@ -59,6 +59,12 @@ cut_data      = transform_to_percentile(blood_data.loc[genes_to_keep].copy())
 pca        = sklearn.decomposition.PCA(n_components=10, svd_solver='full')
 output = pca.fit_transform(cut_data.transpose())
 
+#Fit simple clustering model
+n_clusters = 7
+n_comps = 3
+model = sklearn.mixture.GaussianMixture(n_components=n_clusters)
+blood_annotations['Cluster'] = model.predict(output[:,:n_comps]) 
+
 # Example reading in new data
 
 new_data = pandas.read_csv('/path/to/new_data')
