@@ -21,10 +21,8 @@ def transform_to_percentile(dataframe):
 #
 # Read in data and metadata - there are two metadata files at the moment because of general disorganisation
 
-all_data, all_s4m_metadata = mega_functions.read_in_all_data(
-    read_anew=False, remove_lower_component=False
-)
-
+all_data         = pandas.read_hdf('/path/to/data', 'all_data')
+all_s4m_metadata = pandas.read_hdf('/path/to/metadata', 'metadata')
 # Reorganising slightly disorganised annotations
 
 all_annotations = pandas.read_csv(
